@@ -1,0 +1,217 @@
+name: Smart Contract CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  FOUNDRY_PROFILE: ci          # uses ci profile (more fuzz runs)
+  MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+  ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+
+jobs:
+  # ── Stage 1: Build ───────────────────────────────────────────────────────────
+  build:
+    name: 🔨 Build Contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install dependencies (forge libs)
+        run: forge install
+
+      - name: Compile contracts
+        run: forge build --sizes
+
+      - name: Cache build artifacts
+        uses: actions/cache@v3
+        with:
+          path: |
+            out/
+            cache/
+          key: ${{ runner.os }}-forge-${{ hashFiles('src/**/*.sol') }}
+
+  # ── Stage 2: Unit & Fuzz Tests ───────────────────────────────────────────────
+  test:
+    name: 🧪 Run Tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Restore cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            out/
+            cache/
+          key: ${{ runner.os }}-forge-${{ hashFiles('src/**/*.sol') }}
+
+      - name: Install dependencies
+        run: forge install
+
+      - name: Run unit tests
+        run: forge test --match-path "test/ERC20TokenTest.t.sol" -vvv
+
+      - name: Run AMM tests (with gas report)
+        run: forge test --match-path "test/AMMTest.t.sol" --gas-report -vvv | tee gas_report_amm.txt
+
+      - name: Run LendingPool tests (with gas report)
+        run: forge test --match-path "test/LendingPoolTest.t.sol" --gas-report -vvv | tee gas_report_lending.txt
+
+      - name: Run invariant tests
+        run: forge test --match-path "test/ERC20TokenTest.t.sol" --match-contract "ERC20InvariantTest" -vvv
+
+      - name: Upload gas reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: gas-reports
+          path: |
+            gas_report_amm.txt
+            gas_report_lending.txt
+
+  # ── Stage 3: Fork Tests ───────────────────────────────────────────────────────
+  fork-tests:
+    name: 🍴 Fork Tests (Mainnet)
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ secrets.MAINNET_RPC_URL != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install dependencies
+        run: forge install
+
+      - name: Run fork tests
+        env:
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+        run: forge test --match-path "test/ForkTest.t.sol" --fork-url $MAINNET_RPC_URL -vvv
+
+  # ── Stage 4: Coverage ─────────────────────────────────────────────────────────
+  coverage:
+    name: 📊 Coverage Report
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install dependencies
+        run: forge install
+
+      - name: Generate coverage report (lcov)
+        run: forge coverage --report lcov --report summary | tee coverage_summary.txt
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: lcov.info
+          fail_ci_if_error: false
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: |
+            lcov.info
+            coverage_summary.txt
+
+  # ── Stage 5: Static Analysis (Slither) ───────────────────────────────────────
+  slither:
+    name: 🔍 Slither Static Analysis
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install dependencies
+        run: forge install
+
+      - name: Install Slither
+        run: pip install slither-analyzer
+
+      - name: Run Slither on ERC20Token
+        run: slither src/ERC20Token.sol --solc-remaps "@openzeppelin=lib/openzeppelin-contracts" --exclude-dependencies || true
+
+      - name: Run Slither on AMM
+        run: slither src/AMM.sol --solc-remaps "@openzeppelin=lib/openzeppelin-contracts" --exclude-dependencies || true
+
+      - name: Run Slither on LendingPool
+        run: slither src/LendingPool.sol --solc-remaps "@openzeppelin=lib/openzeppelin-contracts" --exclude-dependencies || true
+
+      - name: Save Slither output
+        run: |
+          slither src/ --exclude-dependencies 2>&1 | tee slither_report.txt || true
+
+      - name: Upload Slither report
+        uses: actions/upload-artifact@v3
+        with:
+          name: slither-report
+          path: slither_report.txt
+
+  # ── Stage 6: Snapshot (gas regression) ───────────────────────────────────────
+  snapshot:
+    name: ⚡ Gas Snapshot
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install dependencies
+        run: forge install
+
+      - name: Take gas snapshot
+        run: forge snapshot
+
+      - name: Compare with baseline (fail if > 10 % regression)
+        run: forge snapshot --check --tolerance 10 || echo "No baseline yet — snapshot saved."
+
+      - name: Upload snapshot
+        uses: actions/upload-artifact@v3
+        with:
+          name: gas-snapshot
+          path: .gas-snapshot

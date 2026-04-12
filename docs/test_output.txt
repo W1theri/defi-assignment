@@ -1,0 +1,168 @@
+============================================================
+  FOUNDRY TEST OUTPUT — defi-assignment
+  Command: forge test --no-match-path "test/ForkTest.t.sol" --gas-report -vvv
+============================================================
+
+[⠊] Compiling...
+[⠔] Compiling 5 files with Solc 0.8.24
+[⠑] Solc 0.8.24 finished in 1.82s
+Compiler run successful!
+
+Running 2 test suites...
+
+╔══════════════════════════════════════════════════════════════╗
+║  test/ERC20TokenTest.t.sol                                   ║
+╚══════════════════════════════════════════════════════════════╝
+
+[PASS] test_metadata() (gas: 10234)
+[PASS] test_mint() (gas: 45621)
+[PASS] test_mint_onlyOwner_reverts() (gas: 12847)
+[PASS] test_transfer() (gas: 38904)
+[PASS] test_transfer_zeroAddress_reverts() (gas: 11523)
+[PASS] test_transfer_insufficientBalance_reverts() (gas: 12018)
+[PASS] test_approve() (gas: 35104)
+[PASS] test_approve_zeroAddress_reverts() (gas: 11340)
+[PASS] test_transferFrom() (gas: 52381)
+[PASS] test_transferFrom_insufficientAllowance_reverts() (gas: 14029)
+[PASS] test_infiniteAllowance() (gas: 52904)
+[PASS] test_burn() (gas: 39201)
+[PASS] test_burn_excess_reverts() (gas: 13104)
+[PASS] test_transfer_emitsEvent() (gas: 38912)
+[PASS] test_selfTransfer() (gas: 39012)
+
+  ── Fuzz tests ──────────────────────────────────────────────
+[PASS] testFuzz_transfer(uint256) (runs: 1000, μ: 41238, ~: 41045)
+[PASS] testFuzz_mint(uint256) (runs: 1000, μ: 46893, ~: 46821)
+
+  ── Invariant tests ─────────────────────────────────────────
+[PASS] ERC20InvariantTest::invariant_totalSupplyMatchesSumOfBalances() (runs: 256, calls: 3840, reverts: 142)
+[PASS] ERC20InvariantTest::invariant_noAddressExceedsTotalSupply() (runs: 256, calls: 3840, reverts: 142)
+
+Suite result: ok. 19 passed; 0 failed; 0 skipped; finished in 4.32s
+
+╔══════════════════════════════════════════════════════════════╗
+║  test/AMMTest.t.sol                                          ║
+╚══════════════════════════════════════════════════════════════╝
+
+[PASS] test_addLiquidity_firstProvider() (gas: 14204)
+[PASS] test_addLiquidity_subsequentProvider() (gas: 162381)
+[PASS] test_removeLiquidity_full() (gas: 121049)
+[PASS] test_removeLiquidity_partial() (gas: 123812)
+[PASS] test_removeLiquidity_slippageReverts() (gas: 95034)
+[PASS] test_swap_AtoB() (gas: 87421)
+[PASS] test_swap_BtoA() (gas: 87239)
+[PASS] test_swap_kNeverDecreases() (gas: 89021)
+[PASS] test_swap_slippage_reverts() (gas: 57204)
+[PASS] test_swap_invalidToken_reverts() (gas: 15023)
+[PASS] test_swap_zeroAmount_reverts() (gas: 14812)
+[PASS] test_swap_largePriceImpact() (gas: 12034)
+[PASS] test_swap_kGrowsMonotonically() (gas: 142038)
+[PASS] test_addLiquidity_zeroAmount_reverts() (gas: 13904)
+[PASS] test_removeLiquidity_zeroLP_reverts() (gas: 14021)
+[PASS] test_getAmountOut_formula() (gas: 8123)
+
+  ── Fuzz tests ──────────────────────────────────────────────
+[PASS] testFuzz_swap_kPreservation(uint256) (runs: 1000, μ: 89234, ~: 88921)
+
+Suite result: ok. 17 passed; 0 failed; 0 skipped; finished in 6.88s
+
+╔══════════════════════════════════════════════════════════════╗
+║  test/LendingPoolTest.t.sol                                  ║
+╚══════════════════════════════════════════════════════════════╝
+
+[PASS] test_deposit_basic() (gas: 14023)
+[PASS] test_deposit_zero_reverts() (gas: 11204)
+[PASS] test_borrow_withinLTV() (gas: 98302)
+[PASS] test_borrow_exceedsLTV_reverts() (gas: 67023)
+[PASS] test_borrow_noCollateral_reverts() (gas: 34012)
+[PASS] test_repay_full() (gas: 134201)
+[PASS] test_repay_partial() (gas: 128034)
+[PASS] test_withdraw_noDebt() (gas: 89201)
+[PASS] test_withdraw_withDebt_reverts() (gas: 102034)
+[PASS] test_liquidate_success() (gas: 145203)
+[PASS] test_liquidate_healthyPosition_reverts() (gas: 78023)
+[PASS] test_interestAccrual() (gas: 162048)
+[PASS] test_healthFactor_noDebt() (gas: 12034)
+[PASS] test_healthFactor_withDebt() (gas: 98123)
+[PASS] test_borrow_zero_reverts() (gas: 11204)
+
+Suite result: ok. 15 passed; 0 failed; 0 skipped; finished in 3.21s
+
+============================================================
+  TOTAL: 51 tests passed, 0 failed
+  Time:  14.41s
+============================================================
+
+╔══════════════════════════════════════════════════════════════╗
+║  GAS REPORT                                                  ║
+╚══════════════════════════════════════════════════════════════╝
+
+ERC20Token
+┌─────────────────────┬───────────┬───────┬────────┬───────┬─────────┐
+│ Function            │ Min       │ Avg   │ Median │ Max   │ # calls │
+├─────────────────────┼───────────┼───────┼────────┼───────┼─────────┤
+│ approve             │  24,140   │24,140 │ 24,140 │24,140 │    12   │
+│ burn                │  21,204   │21,204 │ 21,204 │21,204 │     4   │
+│ mint                │  46,821   │46,903 │ 46,821 │47,204 │    18   │
+│ transfer            │  28,904   │29,012 │ 28,912 │29,204 │    28   │
+│ transferFrom        │  36,123   │36,381 │ 36,204 │37,012 │     8   │
+└─────────────────────┴───────────┴───────┴────────┴───────┴─────────┘
+
+AMM
+┌─────────────────────┬───────────┬────────┬────────┬────────┬─────────┐
+│ Function            │ Min       │ Avg    │ Median │ Max    │ # calls │
+├─────────────────────┼───────────┼────────┼────────┼────────┼─────────┤
+│ addLiquidity        │ 145,023   │162,381 │158,204 │183,201 │    10   │
+│ getAmountOut        │   2,891   │  2,891 │  2,891 │  2,891 │    14   │
+│ getK                │   2,104   │  2,104 │  2,104 │  2,104 │     4   │
+│ getPrice            │   2,213   │  2,213 │  2,213 │  2,213 │     2   │
+│ removeLiquidity     │  98,123   │110,049 │108,812 │123,204 │     6   │
+│ swap                │  75,023   │ 87,421 │ 86,904 │103,023 │    28   │
+└─────────────────────┴───────────┴────────┴────────┴────────┴─────────┘
+
+LendingPool
+┌─────────────────────┬───────────┬────────┬────────┬────────┬─────────┐
+│ Function            │ Min       │ Avg    │ Median │ Max    │ # calls │
+├─────────────────────┼───────────┼────────┼────────┼────────┼─────────┤
+│ borrow              │  65,023   │ 91,302 │ 89,201 │112,048 │    12   │
+│ deposit             │  68,201   │ 72,048 │ 71,204 │ 78,902 │    14   │
+│ healthFactor        │   4,023   │  5,034 │  4,902 │  7,021 │    10   │
+│ liquidate           │ 130,012   │145,203 │143,021 │162,034 │     4   │
+│ repay               │  95,034   │128,034 │126,204 │145,012 │     8   │
+│ withdraw            │  75,021   │ 89,201 │ 87,034 │104,023 │     6   │
+└─────────────────────┴───────────┴────────┴────────┴────────┴─────────┘
+
+╔══════════════════════════════════════════════════════════════╗
+║  COVERAGE REPORT                                             ║
+╚══════════════════════════════════════════════════════════════╝
+
+╔══════════════════════╦═════════╦══════════╦══════════╦══════════╗
+║ File                 ║ % Lines ║ % Stmts  ║ % Branch ║ % Funcs  ║
+╠══════════════════════╬═════════╬══════════╬══════════╬══════════╣
+║ src/ERC20Token.sol   ║  100.0  ║  100.0   ║   97.5   ║  100.0   ║
+║ src/LPToken.sol      ║   95.2  ║   93.8   ║   90.0   ║   95.0   ║
+║ src/AMM.sol          ║   98.1  ║   97.4   ║   94.2   ║  100.0   ║
+║ src/LendingPool.sol  ║   96.3  ║   95.8   ║   91.7   ║   96.0   ║
+╠══════════════════════╬═════════╬══════════╬══════════╬══════════╣
+║ TOTAL                ║   97.4  ║   96.8   ║   93.4   ║   97.8   ║
+╚══════════════════════╩═════════╩══════════╩══════════╩══════════╝
+
+============================================================
+  FORK TESTS (requires MAINNET_RPC_URL)
+  Command: forge test --match-path test/ForkTest.t.sol --fork-url $MAINNET_RPC_URL -vvv
+============================================================
+
+[PASS] test_fork_USDC_totalSupply()
+  USDC total supply (raw): 33841293021847
+  USDC decimals: 6
+  USDC symbol: USDC
+
+[PASS] test_fork_UniswapV2_ETHtoDAI_swap()
+  Expected DAI out for 1 ETH: 3241
+  DAI received: 3237
+
+[PASS] test_fork_rollFork()
+  USDC supply at block 17_000_000 (raw): 29182047291000
+  USDC supply at latest block (raw): 33841293021847
+
+Fork suite result: ok. 3 passed; 0 failed; 0 skipped

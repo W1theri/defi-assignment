@@ -1,0 +1,12 @@
+[filter_paths]
+lib/
+
+[solc_remaps]
+@openzeppelin=lib/openzeppelin-contracts
+
+[detectors_to_exclude]
+naming-convention,solc-version
+
+[exclude_informational]
+
+[exclude_low]
