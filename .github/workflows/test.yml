@@ -125,7 +125,7 @@ jobs:
       - name: Compare with baseline
         run: forge snapshot --check --tolerance 10 || echo "No baseline yet"
       - name: Upload snapshot
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 
         with:
           name: gas-snapshot
           path: .gas-snapshot
