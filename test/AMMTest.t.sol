@@ -189,8 +189,8 @@ contract AMMTest is Test {
         vm.stopPrank();
     }
 
-    /// Test 12: Large swap causes high price impact (output < proportional)
-    function test_swap_largePriceImpact() public {
+/// Test 12: Large swap causes high price impact (output < proportional)
+    function test_swap_largePriceImpact() public view { // ДОБАВЛЕНО view
         // Swap 50 % of reserveA — should get much less than 50 % of reserveB due to impact
         uint256 bigSwap  = amm.reserveA() / 2;
         uint256 naiveOut = amm.reserveB() / 2;
